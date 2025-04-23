@@ -1,5 +1,5 @@
 const crypto = require('crypto');
-const getParameter = require('./utils/getAWSParameter');
+const getParameter = require('./getAWSParameter');
 
 let CKO_WEBHOOK_SIGNATURE = null;
 
