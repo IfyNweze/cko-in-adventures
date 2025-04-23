@@ -25,4 +25,4 @@ async function getParameter(name) {
     }
   }
   
-  module.exports = getParameter; 
+module.exports = getParameter;
