@@ -1,6 +1,6 @@
 require('dotenv').config();  // Load environment variables from .env file
 const express = require('express');
-const getParameter = require('./getParameter');
+const getParameter = require('./utils/getAWSParameter');
 const verifySignature = require('./utils/verifyWebhookSig');
 const writeToDynamoDB= require('./utils/writeToDDB');
 
