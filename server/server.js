@@ -18,7 +18,7 @@ async function fetchEnvVariables() {
     // Fetch values from SSM
     CKO_WEBHOOK_AUTH_TOKEN = await getParameter('CKO_WEBHOOK_AUTH_TOKEN'); 
     CKO_WEBHOOK_SIGNATURE = await getParameter('CKO_WEBHOOK_SIGNATURE');
-    REGION_AWS = await getParameter('REGION_AWS-aws'); 
+    REGION_AWS = await getParameter('REGION_AWS'); 
 
     console.log("Environment variables loaded successfully!");
   } catch (err) {
