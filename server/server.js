@@ -1,8 +1,9 @@
 // server.js
 require('dotenv').config();  // Load environment variables from .env file
 const express = require('express');
+const getParameter = require('./getParameter');
 const verifySignature = require('./utils/verifyWebhookSig');
-const writeToCsv = require('./utils/writeToCSV');
+const writeToDynamoDB= require('./utils/writeToDDB');
 
 const app = express();
 
@@ -39,7 +40,7 @@ app.post('/webhooks', (req, res) => {
 
   // 4. Process the webhook data and write to CSV
   const webhookData = JSON.parse(rawBody); 
-  writeToCsv(webhookData);
+  writeToDynamoDB(webhookData);
 
   console.log('Webhook received and logged:', webhookData);
 
