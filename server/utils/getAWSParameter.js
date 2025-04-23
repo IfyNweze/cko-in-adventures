@@ -4,7 +4,6 @@ const {
   } = require("@aws-sdk/client-ssm");
   
 const REGION = "eu-west-2";
-
 const ssm = new SSMClient({ region: REGION });
 
 async function getParameter(name) {
@@ -16,7 +15,8 @@ async function getParameter(name) {
       };
   
       // Call AWS SSM to get the parameter value
-      const response = await ssm.getParameter(params).promise();
+      const command = new GetParameterCommand(params);
+      const response = await ssm.send(command);
       
       return response.Parameter.Value; 
     } catch (err) {
