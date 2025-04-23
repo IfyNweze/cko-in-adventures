@@ -40,7 +40,7 @@ fetchEnvVariables().then(() => {
 
     
     // 1. Authorization check
-    if (!authHeader || authHeader !== `Bearer ${CKO_WEBHOOK_AUTH_TOKEN}`) {
+    if (!authHeader || authHeader !== CKO_WEBHOOK_AUTH_TOKEN) {
         console.log("cko: ",CKO_WEBHOOK_AUTH_TOKEN)
         return res.status(401).send('Unauthorized');
     }
