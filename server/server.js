@@ -31,6 +31,7 @@ async function fetchEnvVariables() {
 fetchEnvVariables().then(() => {
     app.post('/webhooks', (req, res) => {
     const authHeader = req.headers['authorization'];
+    console.log("authHeader: ", authHeader)
     const signatureHeader = req.headers['cko-signature'];
     const timestampHeader = req.headers['x-webhook-timestamp'];
     
@@ -40,7 +41,7 @@ fetchEnvVariables().then(() => {
     
     // 1. Authorization check
     if (!authHeader || authHeader !== `Bearer ${CKO_WEBHOOK_AUTH_TOKEN}`) {
-        console.log(CKO_WEBHOOK_AUTH_TOKEN)
+        console.log("cko: ",CKO_WEBHOOK_AUTH_TOKEN)
         return res.status(401).send('Unauthorized');
     }
 
