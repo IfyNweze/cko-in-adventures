@@ -1,0 +1,28 @@
+{
+  "name": "cko-in-adventures-erp",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/IfyNweze/cko-in-adventures-erp.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/IfyNweze/cko-in-adventures-erp/issues"
+  },
+  "homepage": "https://github.com/IfyNweze/cko-in-adventures-erp#readme",
+  "description": "",
+  "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.788.0",
+    "@aws-sdk/client-ssm": "^3.787.0",
+    "@aws-sdk/lib-dynamodb": "^3.789.0",
+    "aws-sdk": "^2.1692.0",
+    "dotenv": "^16.5.0",
+    "express": "^5.1.0"
+  }
+}
