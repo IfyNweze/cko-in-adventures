@@ -10,7 +10,7 @@ const crypto = require('crypto');
  */
 
 function verifySignature(rawBody, recievedSig) {
-    const hmac = crypto.createHmac('sha256', process.env.CKO_WEBHOOK_SIGNATURE);
+    const hmac = crypto.createHmac('sha256',CKO_WEBHOOK_SIGNATURE);
     hmac.update(rawBody);
     const expectedSignature = hmac.digest('hex');
     return expectedSignature === recievedSignature;
