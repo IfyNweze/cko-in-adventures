@@ -17,6 +17,9 @@ const ddb = DynamoDBDocumentClient.from(client);
 
 // Main function to write a webhook payload into DynamoDB
 async function writeToDynamoDB(data) {
+  
+  const { id, type, data } = req.body;
+
   try {
     // Generate a timestamp for the event storage time
     const timestamp = new Date().toISOString();
