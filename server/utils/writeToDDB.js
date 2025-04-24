@@ -32,6 +32,12 @@ async function writeToDynamoDB(body) {
       // Store the type of webhook event (like 'payment_approved')
       event_type: type || "unknown_event",
 
+      payment_id: data?.id || null,
+      source_id: data?.source?.id || null,
+      amount: data?.amount || 0,
+      currency: data?.currency || 'N/A',
+      processed_on: data?.processed_on || null,
+
       // Save the timestamp of when the webhook was received/stored
       timestamp,
 
