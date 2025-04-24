@@ -1,3 +1,4 @@
 cko-in-adv-erp-key.pem
 server/.env
 node_modules
+client/node_modules
