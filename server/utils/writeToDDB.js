@@ -16,9 +16,9 @@ const client = new DynamoDBClient({ region: REGION });
 const ddb = DynamoDBDocumentClient.from(client);
 
 // Main function to write a webhook payload into DynamoDB
-async function writeToDynamoDB(data) {
-  
-  const { id, type, data } = req.body;
+async function writeToDynamoDB(body) {
+
+  const { id: eventID, type, data } = body;
 
   try {
     // Generate a timestamp for the event storage time
@@ -27,7 +27,7 @@ async function writeToDynamoDB(data) {
     // Prepare the item to be stored
     const item = {
       // Use data.id if available, otherwise fallback to source_id or a random string
-      event_id: id || "unknown_id",
+      event_id: eventID || "unknown_id",
 
       // Store the type of webhook event (like 'payment_approved')
       event_type: type || "unknown_event",
@@ -46,7 +46,7 @@ async function writeToDynamoDB(data) {
     }));
 
     // Log success
-    console.log("Stored in DynamoDB:", item.id);
+    console.log("Stored in DynamoDB:", item.event_id);
 
   } catch (err) {
     // Log error if anything goes wrong during the write
