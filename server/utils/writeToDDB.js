@@ -24,10 +24,10 @@ async function writeToDynamoDB(data) {
     // Prepare the item to be stored
     const item = {
       // Use data.id if available, otherwise fallback to source_id or a random string
-      id: `${data.id || data.source_id || Math.random().toString(36).slice(2)}`,
+      event_id: id || "unknown_id",
 
       // Store the type of webhook event (like 'payment_approved')
-      event_type: data.type || "unknown_event",
+      event_type: type || "unknown_event",
 
       // Save the timestamp of when the webhook was received/stored
       timestamp,
