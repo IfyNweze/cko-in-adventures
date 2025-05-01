@@ -4,13 +4,14 @@ import { useNavigate } from 'react-router-dom';
 
 const LoginPage = () => {
   const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
   const { login } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (username) {
-      login(username);
+    if (username && email) {
+      login(username, email);
       navigate('/checkout');
     }
   };
@@ -27,6 +28,16 @@ const LoginPage = () => {
             onChange={(e) => setUsername(e.target.value)}
             className="w-full border p-2 rounded"
             placeholder="Enter username"
+          />
+        </div>
+        <div>
+          <label className="block">Email</label>
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="w-full border p-2 rounded"
+            placeholder="Enter email"
           />
         </div>
         <button type="submit" className="bg-blue-500 text-white px-4 py-2 rounded">
