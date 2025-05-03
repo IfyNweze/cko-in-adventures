@@ -1,0 +1,89 @@
+# name: Deploy Webhook Listener to AWS Lambda
+
+# # Trigger deployment only when there's a push to the 'main' branch,
+# # and if files within the webhooks directory or the GitHub Actions workflow itself change.
+# on:
+#   push:
+#     branches:
+#       - main
+#     paths:
+#       - 'webhooks/**'                # Triggers the action if any file in the 'webhooks' directory is changed
+#       - '.github/workflows/deploy-webhook.yml'  # Triggers if the deploy script itself changes
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest  # The environment for running the deployment (Ubuntu)
+
+    steps:
+      # 1. Checkout code from the repository
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      # 2. Set up Node.js (to use AWS CLI and install dependencies)
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'  # Use Node.js 18
+
+      # 3. Install dependencies (e.g., AWS CLI, any additional packages for Lambda)
+      - name: Install dependencies
+        run: |
+          npm install -g aws-cli # Install the AWS CLI globally
+          npm install  # Install local project dependencies
+
+      # 4. Create or Update the Lambda function
+      - name: Deploy to AWS Lambda
+        run: |
+          # Ensure AWS CLI is configured (using your AWS access keys)
+          aws configure set aws_access_key_id ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws configure set aws_secret_access_key ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws configure set region eu-west-2  # Set AWS region if not default
+
+          # 4.1 Zip the webhooks directory (handler.js and utils)
+          zip -r webhooks.zip ./webhooks/*
+
+          # 4.2 Create or update the Lambda function
+          aws lambda update-function-code \
+            --function-name webhookListener \
+            --zip-file fileb://webhooks.zip \
+            --handler handler.handler  # Specify the correct handler file and function name (handler.handler)
+
+          # Optionally create the function if it doesn't exist yet
+          if ! aws lambda get-function --function-name webhookListener; then
+            aws lambda create-function \
+              --function-name webhookListener \
+              --runtime nodejs18.x \
+              --role arn:aws:iam::123456789012:role/LambdaExecutionRole \
+              --handler handler.handler  # Specify the correct handler file and function name
+              --zip-file fileb://webhooks.zip \
+              --timeout 60 \
+              --memory-size 128
+          fi
+
+      # 5. Set up API Gateway (optional, if using API Gateway to expose Lambda)
+      - name: Set up API Gateway
+        run: |
+          # Create or update API Gateway (You can choose to manually set this up on AWS Console too)
+          # Example of creating a REST API and linking it with the Lambda function
+
+          # Check if the API exists, if not, create one
+          api_id=$(aws apigatewayv2 create-api \
+            --name webhook-api \
+            --protocol-type HTTP \
+            --target arn:aws:lambda:eu-west-2:123456789012:function:webhookListener \
+            --query 'ApiId' --output text)
+          
+          # Set up route (if needed)
+          aws apigatewayv2 create-route \
+            --api-id $api_id \
+            --route-key 'POST /webhook' \
+            --target arn:aws:lambda:eu-west-2:123456789012:function:webhookListener
+          
+          # Optionally create a deployment stage
+          aws apigatewayv2 create-deployment --api-id $api_id --stage-name prod
+
+      # 6. Clean up (optional)
+      - name: Clean up
+        run: |
+          # Remove the zipped file
+          rm webhooks.zip
