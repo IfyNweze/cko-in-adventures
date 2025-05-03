@@ -7,6 +7,7 @@ const writeToDynamoDB = require('./utils/writeToDDB');
 
 const app = express();
 
+
 // Middleware to parse raw body (Buffer) for webhooks
 app.use('/webhooks', express.raw({ type: 'application/json' }));
 // Middleware to parse JSON body for payment session endpoint
