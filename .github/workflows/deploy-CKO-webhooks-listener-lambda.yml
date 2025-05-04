@@ -13,23 +13,25 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+
     env:
       AWS_REGION: eu-west-2
       LAMBDA_FUNCTION_NAME: cko-webhook-listener
       API_NAME: cko-webhook-api
       API_ROUTE: POST /cko-webhooks
+      STAGE_NAME: dev
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4 
+        uses: actions/checkout@v4
 
       - name: Set up Node.js
-        uses: actions/setup-node@v4 
+        uses: actions/setup-node@v4
         with:
           node-version: '20'
 
       - name: Cache node_modules
-        uses: actions/cache@v4 
+        uses: actions/cache@v4
         with:
           path: webhooks/node_modules
           key: ${{ runner.os }}-node-${{ hashFiles('webhooks/package-lock.json') }}
@@ -40,36 +42,34 @@ jobs:
         run: npm ci
         working-directory: webhooks
 
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v4 
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
 
       - name: Get AWS Account ID
-        id: account
+        id: aws
         run: |
           echo "account_id=$(aws sts get-caller-identity --query Account --output text)" >> $GITHUB_OUTPUT
           echo "LAMBDA_ROLE=arn:aws:iam::$(aws sts get-caller-identity --query Account --output text):role/cko-lambda" >> $GITHUB_ENV
 
-      - name: Deploy to AWS Lambda 
+      - name: Zip webhooks directory
         run: |
-          set -e
-          # Zip the webhooks directory & hide node_modules
           cd webhooks
-          zip -r ../webhooks.zip . | grep -v 'node_modules'
+          zip -r ../webhooks.zip . -x "node_modules/*"
           cd ..
 
-          # Create or update Lambda function
-          if aws lambda get-function --function-name ${{ env.LAMBDA_FUNCTION_NAME }} --region ${{ env.AWS_REGION }}; then
-            echo "Updating existing function..."
+      - name: Deploy Lambda function
+        run: |
+          if aws lambda get-function --function-name ${{ env.LAMBDA_FUNCTION_NAME }}; then
+            echo "Updating existing Lambda..."
             aws lambda update-function-code \
               --function-name ${{ env.LAMBDA_FUNCTION_NAME }} \
-              --zip-file fileb://webhooks.zip \
-              --region ${{ env.AWS_REGION }}
+              --zip-file fileb://webhooks.zip
           else
-            echo "Creating new function..."
+            echo "Creating new Lambda..."
             aws lambda create-function \
               --function-name ${{ env.LAMBDA_FUNCTION_NAME }} \
               --runtime nodejs20.x \
@@ -77,68 +77,72 @@ jobs:
               --handler webhooks/handler.handler \
               --zip-file fileb://webhooks.zip \
               --timeout 60 \
-              --memory-size 128 \
-              --region ${{ env.AWS_REGION }}
+              --memory-size 128
           fi
 
-      - name: Set up API Gateway
+      - name: Set up API Gateway and Integration
         run: |
           set -e
-          # Check if API exists
-          api_id=$(aws apigatewayv2 get-apis --region ${{ env.AWS_REGION }} --query "Items[?Name=='${{ env.API_NAME }}'].ApiId" --output text)
+
+          # Get or create API
+          api_id=$(aws apigatewayv2 get-apis --query "Items[?Name=='${{ env.API_NAME }}'].ApiId" --output text)
           if [ -z "$api_id" ]; then
             echo "Creating new API..."
             api_id=$(aws apigatewayv2 create-api \
               --name ${{ env.API_NAME }} \
               --protocol-type HTTP \
-              --region ${{ env.AWS_REGION }} \
               --query 'ApiId' --output text)
-          else
-            echo "Using existing API: $api_id"
           fi
+          echo "API ID: $api_id"
 
-          # Create integration and store integration_id
+          # Create integration
           integration_id=$(aws apigatewayv2 create-integration \
             --api-id $api_id \
             --integration-type AWS_PROXY \
-            --integration-uri arn:aws:lambda:${{ env.AWS_REGION }}:${{ steps.account.outputs.account_id }}:function:${{ env.LAMBDA_FUNCTION_NAME }} \
+            --integration-uri arn:aws:lambda:${{ env.AWS_REGION }}:${{ steps.aws.outputs.account_id }}:function:${{ env.LAMBDA_FUNCTION_NAME }} \
             --payload-format-version "2.0" \
-            --region ${{ env.AWS_REGION }} \
             --query 'IntegrationId' --output text)
 
-          # Use integration_id properly in create-route
-          route_id=$(aws apigatewayv2 get-routes --api-id $api_id --region ${{ env.AWS_REGION }} --query "Items[?RouteKey=='${{ env.API_ROUTE }}'].RouteId" --output text)
+          # Create route if not exists
+          route_id=$(aws apigatewayv2 get-routes --api-id $api_id --query "Items[?RouteKey=='${{ env.API_ROUTE }}'].RouteId" --output text)
           if [ -z "$route_id" ]; then
-            echo "Creating route..."
             aws apigatewayv2 create-route \
               --api-id $api_id \
               --route-key "${{ env.API_ROUTE }}" \
-              --target "integrations/$integration_id" \
-              --region ${{ env.AWS_REGION }}
-          else
-            echo "Route already exists"
+              --target "integrations/$integration_id"
           fi
 
-          # Check if stage exists before creating it
-          stage_exists=$(aws apigatewayv2 get-stages --api-id $api_id --region ${{ env.AWS_REGION }} --query "Items[?StageName=='dev'].StageName" --output text)
-          if [ "$stage_exists" == "dev" ]; then
-            echo "Stage already exists, skipping stage creation"
-          else
-            echo "Creating new stage..."
+          # Create stage if needed
+          stage_exists=$(aws apigatewayv2 get-stages --api-id $api_id --query "Items[?StageName=='${{ env.STAGE_NAME }}'].StageName" --output text)
+          if [ "$stage_exists" != "${{ env.STAGE_NAME }}" ]; then
             aws apigatewayv2 create-stage \
               --api-id $api_id \
-              --stage-name dev \
-              --auto-deploy \
-              --region ${{ env.AWS_REGION }}
+              --stage-name ${{ env.STAGE_NAME }} \
+              --auto-deploy
           fi
 
-          # Create or update deployment
-          aws apigatewayv2 create-deployment --api-id $api_id --region ${{ env.AWS_REGION }}
+          # Deploy API
+          aws apigatewayv2 create-deployment --api-id $api_id
 
-      - name: Output API Endpoint
+          # Save API ID for later step
+          echo "api_id=$api_id" >> $GITHUB_ENV
+
+      - name: Add Lambda invoke permission for API Gateway
         run: |
-          echo "API Endpoint: https://$(aws apigatewayv2 get-api --api-id ${{ steps.set_api.outputs.api_id }} --region ${{ env.AWS_REGION }} --query 'ApiEndpoint' --output text)/dev/cko-webhooks"
-    
-      - name: Clean up
+          set -e
+          aws lambda add-permission \
+            --function-name ${{ env.LAMBDA_FUNCTION_NAME }} \
+            --statement-id AllowAPIGatewayInvoke \
+            --action lambda:InvokeFunction \
+            --principal apigateway.amazonaws.com \
+            --source-arn arn:aws:execute-api:${{ env.AWS_REGION }}:${{ steps.aws.outputs.account_id }}:${{ env.api_id }}/*/POST/cko-webhooks \
+            || echo "Permission already exists"
+
+      - name: Output API endpoint
         run: |
-          rm webhooks.zip
+          endpoint=$(aws apigatewayv2 get-api --api-id ${{ env.api_id }} --query 'ApiEndpoint' --output text)
+          echo "Webhook URL:"
+          echo "$endpoint/${{ env.STAGE_NAME }}/cko-webhooks"
+
+      - name: Clean up zip
+        run: rm webhooks.zip
