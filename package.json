@@ -23,9 +23,11 @@
     "@aws-sdk/lib-dynamodb": "^3.789.0",
     "@checkout.com/checkout-web-components": "^0.6.0-beta",
     "aws-sdk": "^2.1692.0",
-    "axios": "^1.8.4",
+    "axios": "^1.9.0",
+    "body-parser": "^2.2.0",
     "cors": "^2.8.5",
     "dotenv": "^16.5.0",
-    "express": "^5.1.0"
+    "express": "^5.1.0",
+    "uuid": "^11.1.0"
   }
 }
