@@ -40,18 +40,19 @@ jobs:
         run: npm ci
         working-directory: webhooks
 
-      - name: Get AWS Account ID
-        id: account
-        run: |
-          echo "account_id=$(aws sts get-caller-identity --query Account --output text)" >> $GITHUB_OUTPUT
-          echo "LAMBDA_ROLE=arn:aws:iam::$(aws sts get-caller-identity --query Account --output text):role/cko-lambda" >> $GITHUB_ENV
-
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4 # Fallback to v2 if v4 unavailable
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
+
+      - name: Get AWS Account ID
+        id: account
+        run: |
+          account_id=$(aws sts get-caller-identity --query Account --output text)
+          echo "account_id=$account_id" >> $GITHUB_OUTPUT
+          echo "LAMBDA_ROLE=arn:aws:iam::$account_id:role/cko-lambda" >> $GITHUB_ENV 
 
       - name: Deploy to AWS Lambda 
         run: |
