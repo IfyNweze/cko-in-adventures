@@ -21,15 +21,15 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4 # Fallback to v3 if v4 unavailable
+        uses: actions/checkout@v4 
 
       - name: Set up Node.js
-        uses: actions/setup-node@v4 # Fallback to v3 if v4 unavailable
+        uses: actions/setup-node@v4 
         with:
           node-version: '20'
 
       - name: Cache node_modules
-        uses: actions/cache@v4 # Fallback to v3 if v4 unavailable
+        uses: actions/cache@v4 
         with:
           path: webhooks/node_modules
           key: ${{ runner.os }}-node-${{ hashFiles('webhooks/package-lock.json') }}
@@ -41,7 +41,7 @@ jobs:
         working-directory: webhooks
 
       - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v4 # Fallback to v2 if v4 unavailable
+        uses: aws-actions/configure-aws-credentials@v4 
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -99,24 +99,38 @@ jobs:
             echo "Using existing API: $api_id"
           fi
 
-          echo "api_id=$api_id" >> $GITHUB_ENV
+          # Create integration and store integration_id
+          integration_id=$(aws apigatewayv2 create-integration \
+            --api-id $api_id \
+            --integration-type AWS_PROXY \
+            --integration-uri arn:aws:lambda:${{ env.AWS_REGION }}:${{ steps.account.outputs.account_id }}:function:${{ env.LAMBDA_FUNCTION_NAME }} \
+            --payload-format-version "2.0" \  
+            --region ${{ env.AWS_REGION }} \
+            --query 'IntegrationId' --output text)
 
-          # Check if route exists
+          # Use integration_id properly in create-route
           route_id=$(aws apigatewayv2 get-routes --api-id $api_id --region ${{ env.AWS_REGION }} --query "Items[?RouteKey=='${{ env.API_ROUTE }}'].RouteId" --output text)
           if [ -z "$route_id" ]; then
             echo "Creating route..."
             aws apigatewayv2 create-route \
               --api-id $api_id \
-              --route-key '${{ env.API_ROUTE }}' \
-              --target "integrations/$(aws apigatewayv2 create-integration --api-id $api_id --integration-type AWS_PROXY --integration-uri arn:aws:lambda:${{ env.AWS_REGION }}:${{ steps.account.outputs.account_id }}:function:${{ env.LAMBDA_FUNCTION_NAME }} --region ${{ env.AWS_REGION }} --query 'IntegrationId' --output text)" \
+              --route-key "${{ env.API_ROUTE }}" \
+              --target "integrations/$integration_id" \
               --region ${{ env.AWS_REGION }}
           else
             echo "Route already exists"
           fi
 
-          # Create or update stage
+          # Create or update deployment stage
           aws apigatewayv2 create-deployment --api-id $api_id --region ${{ env.AWS_REGION }}
-          aws apigatewayv2 create-stage --api-id $api_id --stage-name dev --auto-deploy --region ${{ env.AWS_REGION }}
+          aws apigatewayv2 create-stage \
+            --api-id $api_id \
+            --stage-name dev \
+            --auto-deploy \
+            --region ${{ env.AWS_REGION }}
+
+          # Export API ID to GitHub Actions output
+          echo "api_id=$api_id" >> $GITHUB_OUTPUT
 
       - name: Output API Endpoint
         run: |
