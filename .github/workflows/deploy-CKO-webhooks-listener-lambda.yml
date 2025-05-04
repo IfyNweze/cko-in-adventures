@@ -6,7 +6,7 @@ on:
       - main
     paths:
       - 'webhooks/**'
-      - '.github/workflows/deploy-webhook.yml'
+      - '.github/workflows/deploy-CKO-webhooks-listener-lambda.yml'
 
 jobs:
   deploy:
