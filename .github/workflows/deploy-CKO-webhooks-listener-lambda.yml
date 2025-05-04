@@ -119,20 +119,21 @@ jobs:
             echo "Route already exists"
           fi
 
-          # Create or update deployment stage
+          # Check if stage exists before creating it
+          stage_exists=$(aws apigatewayv2 get-stages --api-id $api_id --region ${{ env.AWS_REGION }} --query "Items[?StageName=='dev'].StageName" --output text)
+          if [ "$stage_exists" == "dev" ]; then
+            echo "Stage already exists, skipping stage creation"
+          else
+            echo "Creating new stage..."
+            aws apigatewayv2 create-stage \
+              --api-id $api_id \
+              --stage-name dev \
+              --auto-deploy \
+              --region ${{ env.AWS_REGION }}
+          fi
+
+          # Create or update deployment
           aws apigatewayv2 create-deployment --api-id $api_id --region ${{ env.AWS_REGION }}
-          aws apigatewayv2 create-stage \
-            --api-id $api_id \
-            --stage-name dev \
-            --auto-deploy \
-            --region ${{ env.AWS_REGION }}
-      
-      
-      - name: Set up API Gateway
-        id: set_api
-        run: |
-          # logic...
-          echo "api_id=$api_id" >> $GITHUB_OUTPUT
 
       - name: Output API Endpoint
         run: |
