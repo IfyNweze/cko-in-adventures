@@ -74,7 +74,7 @@ jobs:
               --function-name ${{ env.LAMBDA_FUNCTION_NAME }} \
               --runtime nodejs20.x \
               --role ${{ env.LAMBDA_ROLE }} \
-              --handler handler.handler \
+              --handler webhooks/handler.handler \
               --zip-file fileb://webhooks.zip \
               --timeout 60 \
               --memory-size 128 \
