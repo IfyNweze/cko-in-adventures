@@ -20,11 +20,19 @@ async function loadEnv() {
     getAWSParameter('CKO_SECRET_KEY'),
   ]);
 
-  cachedEnv = {
+  const secrets = {
     CKO_WEBHOOK_AUTH_TOKEN,
     CKO_WEBHOOK_SIGNATURE,
     CKO_SECRET_KEY,
   };
+  
+  for (const [key, value] of Object.entries(secrets)) {
+    if (!value) {
+      throw new Error(`Missing required secret: ${key} from AWS SSM`);
+    }
+  }
+  
+  cachedEnv = secrets;
 
   return cachedEnv;
 }

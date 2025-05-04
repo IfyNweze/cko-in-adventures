@@ -1,0 +1,128 @@
+name: Deploy Webhook Listener to AWS Lambda
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'webhooks/**'
+      - '.github/workflows/deploy-webhook.yml'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    env:
+      AWS_REGION: eu-west-2
+      LAMBDA_FUNCTION_NAME: cko-webhook-listener
+      API_NAME: cko-webhook-api
+      API_ROUTE: POST /cko-webhooks
+
+    steps:
+        # Pulls code from repo -> makes avaliable for the deployment steps 
+      - name: Checkout code
+        uses: actions/checkout@v4 
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4 
+        with:
+          node-version: '21'
+
+      - name: Cache node_modules
+        uses: actions/cache@v4
+        with:
+          path: webhooks/node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('webhooks/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      - name: Install dependencies
+        run: npm ci
+        working-directory: webhooks
+        
+        # Dynamically fetches AWS Account ID from AWS STS
+        # Constructs the IAM role ARN - based off IAM role cko-lambda
+      - name: Get AWS Account ID
+        id: account
+        run: |
+          echo "account_id=$(aws sts get-caller-identity --query Account --output text)" >> $GITHUB_OUTPUT
+          echo "LAMBDA_ROLE=arn:aws:iam::$(aws sts get-caller-identity --query Account --output text):role/cko-lambda" >> $GITHUB_ENV
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4 
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Deploy to AWS Lambda
+        run: |
+          set -e
+          # Zip the webhooks directory
+          cd webhooks
+          zip -r ../webhooks.zip .
+          cd ..
+
+          # Create or update Lambda function
+          if aws lambda get-function --function-name ${{ env.LAMBDA_FUNCTION_NAME }} --region ${{ env.AWS_REGION }}; then
+            echo "Updating existing function..."
+            aws lambda update-function-code \
+              --function-name ${{ env.LAMBDA_FUNCTION_NAME }} \
+              --zip-file fileb://webhooks.zip \
+              --handler handler.handler \
+              --runtime nodejs21.x \
+              --region ${{ env.AWS_REGION }}
+          else
+            echo "Creating new function..."
+            aws lambda create-function \
+              --function-name ${{ env.LAMBDA_FUNCTION_NAME }} \
+              --runtime nodejs21.x \
+              --role ${{ env.LAMBDA_ROLE }} \
+              --handler handler.handler \
+              --zip-file fileb://webhooks.zip \
+              --timeout 60 \
+              --memory-size 128 \
+              --region ${{ env.AWS_REGION }}
+          fi
+
+      - name: Set up API Gateway
+        run: |
+          set -e
+          # Check if API exists
+          api_id=$(aws apigatewayv2 get-apis --region ${{ env.AWS_REGION }} --query "Items[?Name=='${{ env.API_NAME }}'].ApiId" --output text)
+          if [ -z "$api_id" ]; then
+            echo "Creating new API..."
+            api_id=$(aws apigatewayv2 create-api \
+              --name ${{ env.API_NAME }} \
+              --protocol-type HTTP \
+              --region ${{ env.AWS_REGION }} \
+              --query 'ApiId' --output text)
+          else
+            echo "Using existing API: $api_id"
+          fi
+
+          # Check if route exists
+          route_id=$(aws apigatewayv2 get-routes --api-id $api_id --region ${{ env.AWS_REGION }} --query "Items[?RouteKey=='${{ env.API_ROUTE }}'].RouteId" --output text)
+          if [ -z "$route_id" ]; then
+            echo "Creating route..."
+            aws apigatewayv2 create-route \
+              --api-id $api_id \
+              --route-key '${{ env.API_ROUTE }}' \
+              --target "integrations/$(aws apigatewayv2 create-integration --api-id $api_id --integration-type AWS_PROXY --integration-uri arn:aws:lambda:${{ env.AWS_REGION }}:${{ steps.account.outputs.account_id }}:function:${{ env.LAMBDA_FUNCTION_NAME }} --region ${{ env.AWS_REGION }} --query 'IntegrationId' --output text)" \
+              --region ${{ env.AWS_REGION }}
+          else
+            echo "Route already exists"
+          fi
+
+          # Create or update stage
+          aws apigatewayv2 create-deployment --api-id $api_id --region ${{ env.AWS_REGION }}
+          aws apigatewayv2 create-stage --api-id $api_id --stage-name dev --auto-deploy --region ${{ env.AWS_REGION }}
+
+      - name: Output API Endpoint
+        run: |
+          echo "API Endpoint: https://$(aws apigatewayv2 get-api --api-id $api_id --region ${{ env.AWS_REGION }} --query 'ApiEndpoint' --output text)/dev/cko-webhooks"
+
+      - name: Clean up
+        run: |
+          rm webhooks.zip

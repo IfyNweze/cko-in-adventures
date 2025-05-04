@@ -12,7 +12,12 @@ const ssm = new SSMClient({ region: REGION });
  * @returns {Promise<string>} - The decrypted value of the parameter.
  */
 
-async function getParameter(name) {
+async function getAWSParameter(name) {
+
+  if (!name) {
+    throw new Error("No parameter name?");
+  }
+  
   try {
     const command = new GetParameterCommand({
       Name: name,
@@ -24,8 +29,8 @@ async function getParameter(name) {
     
   } catch (err) {
     console.error(`Error fetching parameter ${name}:`, err);
-    throw err; 
+    throw new Error(`Failed to fetch secret "${name}" from SSM: ${err.message}`);
   }
 }
   
-module.exports = getParameter;
+module.exports = getAWSParameter;
