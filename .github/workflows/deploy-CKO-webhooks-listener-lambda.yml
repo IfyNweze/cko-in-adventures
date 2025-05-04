@@ -56,9 +56,9 @@ jobs:
       - name: Deploy to AWS Lambda 
         run: |
           set -e
-          # Zip the webhooks directory
+          # Zip the webhooks directory & hide node_modules
           cd webhooks
-          zip -r ../webhooks.zip .
+          zip -r ../webhooks.zip . | grep -v 'node_modules'
           cd ..
 
           # Create or update Lambda function
@@ -67,8 +67,6 @@ jobs:
             aws lambda update-function-code \
               --function-name ${{ env.LAMBDA_FUNCTION_NAME }} \
               --zip-file fileb://webhooks.zip \
-              --handler handler.handler \
-              --runtime nodejs20.x \
               --region ${{ env.AWS_REGION }}
           else
             echo "Creating new function..."
@@ -128,14 +126,18 @@ jobs:
             --stage-name dev \
             --auto-deploy \
             --region ${{ env.AWS_REGION }}
-
-          # Export API ID to GitHub Actions output
+      
+      
+      - name: Set up API Gateway
+        id: set_api
+        run: |
+          # logic...
           echo "api_id=$api_id" >> $GITHUB_OUTPUT
 
       - name: Output API Endpoint
         run: |
-          echo "API Endpoint: https://$(aws apigatewayv2 get-api --api-id ${{ env.api_id }} --region ${{ env.AWS_REGION }} --query 'ApiEndpoint' --output text)/dev/cko-webhooks"
-
+          echo "API Endpoint: https://$(aws apigatewayv2 get-api --api-id ${{ steps.set_api.outputs.api_id }} --region ${{ env.AWS_REGION }} --query 'ApiEndpoint' --output text)/dev/cko-webhooks"
+    
       - name: Clean up
         run: |
           rm webhooks.zip
