@@ -78,7 +78,7 @@ jobs:
               --role ${{ env.LAMBDA_ROLE }} \
               --handler handler.handler \
               --zip-file fileb://webhooks.zip \
-              --timeout 60 \
+              --timeout 75 \
               --memory-size 128 \
               --region ${{ env.AWS_REGION }}
           fi
