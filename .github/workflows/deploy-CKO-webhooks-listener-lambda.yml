@@ -26,7 +26,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4 # Fallback to v3 if v4 unavailable
         with:
-          node-version: '21'
+          node-version: '20'
 
       - name: Cache node_modules
         uses: actions/cache@v4 # Fallback to v3 if v4 unavailable
@@ -50,9 +50,8 @@ jobs:
       - name: Get AWS Account ID
         id: account
         run: |
-          account_id=$(aws sts get-caller-identity --query Account --output text)
-          echo "account_id=$account_id" >> $GITHUB_OUTPUT
-          echo "LAMBDA_ROLE=arn:aws:iam::$account_id:role/cko-lambda" >> $GITHUB_ENV 
+          echo "account_id=$(aws sts get-caller-identity --query Account --output text)" >> $GITHUB_OUTPUT
+          echo "LAMBDA_ROLE=arn:aws:iam::$(aws sts get-caller-identity --query Account --output text):role/cko-lambda" >> $GITHUB_ENV
 
       - name: Deploy to AWS Lambda 
         run: |
@@ -69,17 +68,17 @@ jobs:
               --function-name ${{ env.LAMBDA_FUNCTION_NAME }} \
               --zip-file fileb://webhooks.zip \
               --handler handler.handler \
-              --runtime nodejs21.x \
+              --runtime nodejs20.x \
               --region ${{ env.AWS_REGION }}
           else
             echo "Creating new function..."
             aws lambda create-function \
               --function-name ${{ env.LAMBDA_FUNCTION_NAME }} \
-              --runtime nodejs21.x \
+              --runtime nodejs20.x \
               --role ${{ env.LAMBDA_ROLE }} \
               --handler handler.handler \
               --zip-file fileb://webhooks.zip \
-              --timeout 75 \
+              --timeout 60 \
               --memory-size 128 \
               --region ${{ env.AWS_REGION }}
           fi
@@ -100,6 +99,8 @@ jobs:
             echo "Using existing API: $api_id"
           fi
 
+          echo "api_id=$api_id" >> $GITHUB_ENV
+
           # Check if route exists
           route_id=$(aws apigatewayv2 get-routes --api-id $api_id --region ${{ env.AWS_REGION }} --query "Items[?RouteKey=='${{ env.API_ROUTE }}'].RouteId" --output text)
           if [ -z "$route_id" ]; then
@@ -119,7 +120,7 @@ jobs:
 
       - name: Output API Endpoint
         run: |
-          echo "API Endpoint: https://$(aws apigatewayv2 get-api --api-id $api_id --region ${{ env.AWS_REGION }} --query 'ApiEndpoint' --output text)/dev/cko-webhooks"
+          echo "API Endpoint: https://$(aws apigatewayv2 get-api --api-id ${{ env.api_id }} --region ${{ env.AWS_REGION }} --query 'ApiEndpoint' --output text)/dev/cko-webhooks"
 
       - name: Clean up
         run: |
