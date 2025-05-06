@@ -1,17 +1,19 @@
 import { useState, useEffect } from 'react';
-import { useCart } from '../context/CartContext';
-import { useAuth } from '../context/AuthContext';
+import { useCart } from '../contexts/CartContext';
+import { useAuth } from '../contexts/AuthContext';
 import CheckoutItem from '../components/CheckoutItem';
-import { CheckoutWebComponents } from '@checkout.com/checkout-web-components';
+// import { CheckoutWebComponents } from '@checkout.com/checkout-web-components';
 
 const CheckoutPage = () => {
   const { cart } = useCart();
   const { user } = useAuth();
   const [sessionId, setSessionId] = useState(null);
+  const [loading, setLoading] = useState(true);
   const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
   useEffect(() => {
     const fetchPaymentSession = async () => {
+      setLoading(true);
       try {
         const response = await fetch('http://localhost:3000/api/create-payment-session', {
           method: 'POST',
@@ -25,8 +27,10 @@ const CheckoutPage = () => {
         });
         const data = await response.json();
         setSessionId(data.id);
+        setLoading(false);
       } catch (error) {
         console.error('Error fetching payment session:', error);
+        setLoading(false);
       }
     };
 
@@ -36,23 +40,27 @@ const CheckoutPage = () => {
   useEffect(() => {
     if (sessionId) {
       const checkout = new CheckoutWebComponents({
-        publicKey: 'your-public-key-from-checkout-dashboard', // Replace with sandbox public key
+        publicKey: process.env.REACT_APP_CHECKOUT_PUBLIC_KEY, // Use environment variable for security
         environment: 'sandbox',
         paymentSessionId: sessionId,
         appearance: {
           colors: {
-            primary: '#3b82f6', // Match Tailwind bg-blue-500
-            background: '#f3f4f6', // Match Tailwind bg-gray-100
+            primary: '#3b82f6', // Tailwind blue
+            background: '#f3f4f6', // Tailwind gray
           },
           border: { radius: '0.5rem' },
         },
         onPaymentCompleted: (event) => {
+          // Handle successful payment
           console.log('Payment completed:', event);
-          // Webhook will handle order status; redirect handled by success_url
+          // Redirect to success page with order details
+          history.push('/success', { orderId: event.orderId, items: cart });
         },
         onError: (error) => {
+          // Handle error
           console.error('Payment error:', error);
-          // Display error to user
+          // Redirect to failure page with error details
+          history.push('/failure', { error: error.message });
         },
       });
 
@@ -79,8 +87,12 @@ const CheckoutPage = () => {
         {user ? (
           <>
             <p>Logged in as: {user.username}</p>
-            <p>Saved Card: {user.savedCard}</p>
-            <div id="flow-container" className="mt-4"></div>
+            {/* Removed saved card info */}
+            {loading ? (
+              <p>Loading payment options...</p>
+            ) : (
+              <div id="flow-container" className="mt-4"></div>
+            )}
           </>
         ) : (
           <p>

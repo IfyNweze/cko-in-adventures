@@ -1,4 +1,5 @@
-import { useCart } from '../context/CartContext';
+import { useCart } from '../contexts/CartContext';
+import { formatCurrency } from '../utils/formatCurrency'; 
 
 const CheckoutItem = ({ item }) => {
   const { updateQuantity, removeFromCart } = useCart();
@@ -8,7 +9,7 @@ const CheckoutItem = ({ item }) => {
       <img src={item.image} alt={item.name} className="w-16 h-16 object-cover" />
       <div className="flex-1 ml-4">
         <h3 className="text-lg">{item.name}</h3>
-        <p>${item.price.toFixed(2)}</p>
+        <p>{formatCurrency(item.price)}</p> {/* --> formatCurrency to format the price */}
       </div>
       <div className="flex items-center">
         <button

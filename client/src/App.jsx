@@ -1,8 +1,8 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import { CartProvider } from './context/CartContext';
-import { AuthProvider } from './context/AuthContext';
+import { CartProvider } from './contexts/CartContext';
+import { AuthProvider } from './contexts/AuthContext';
 import Navbar from './components/Navbar';
-import ProductPage from './pages/ProductPage';
+import ProductList from './pages/ProductList';
 import CheckoutPage from './pages/CheckoutPage';
 import LoginPage from './pages/LoginPage';
 import SuccessPage from './pages/SuccessPage';
@@ -15,7 +15,7 @@ function App() {
         <CartProvider>
           <Navbar />
           <Routes>
-            <Route path="/" element={<ProductPage />} />
+            <Route path="/" element={<ProductList />} />
             <Route path="/checkout" element={<CheckoutPage />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/checkout/success" element={<SuccessPage />} />

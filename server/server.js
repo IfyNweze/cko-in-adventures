@@ -1,35 +1,18 @@
 require('dotenv').config(); 
-const express = require('express');
+
 const axios = require('axios');
-const getParameter = require('./utils/getAWSParameter');
-const verifySignature = require('./utils/verifyWebhookSig');
-const writeToDynamoDB = require('./utils/writeToDDB');
+const bodyParser = require('body-parser');
+const { DateTime } = require('luxon');
+const express = require('express');
+const uuid = require('uuid');
 
 const app = express();
 
 
-// Middleware to parse raw body (Buffer) for webhooks
-app.use('/webhooks', express.raw({ type: 'application/json' }));
 // Middleware to parse JSON body for payment session endpoint
 app.use(express.json());
 
-let CKO_WEBHOOK_AUTH_TOKEN, CKO_WEBHOOK_SIGNATURE, REGION_AWS, CKO_SECRET_KEY;
-
-// Function to load parameters from Systems Manager
-async function fetchEnvVariables() {
-  try {
-    // Fetch values from SSM
-    CKO_WEBHOOK_AUTH_TOKEN = await getParameter('CKO_WEBHOOK_AUTH_TOKEN');
-    CKO_WEBHOOK_SIGNATURE = await getParameter('CKO_WEBHOOK_SIGNATURE');
-    REGION_AWS = await getParameter('REGION_AWS');
-    CKO_SECRET_KEY = await getParameter('CKO_SECRET_KEY');
-
-    console.log('Environment variables loaded successfully!');
-  } catch (err) {
-    console.error('Error loading environment variables', err);
-    process.exit(1); // Exit if we fail to load params
-  }
-}
+let CKO_SECRET_KEY;
 
 // Payment session endpoint
 app.post('/api/create-payment-session', async (req, res) => {
@@ -70,50 +53,10 @@ app.post('/api/create-payment-session', async (req, res) => {
   }
 });
 
-// Webhook endpoint
-app.post('/webhooks', (req, res) => {
-  const authHeader = req.headers['authorization'];
-  console.log('authHeader: ', authHeader);
-  const signatureHeader = req.headers['cko-signature'];
-  const timestampHeader = req.headers['x-webhook-timestamp'];
 
-  console.log('headers');
-  console.log(req.headers);
-
-  // 1. Authorization check
-  if (!authHeader || authHeader !== CKO_WEBHOOK_AUTH_TOKEN) {
-    console.log('cko: ', CKO_WEBHOOK_AUTH_TOKEN);
-    return res.status(401).send('Unauthorized');
-  }
-
-  // 2. Get raw body (Buffer)
-  const rawBody = req.body;
-
-  // 3. Signature verification
-  if (!verifySignature(rawBody, signatureHeader)) {
-    return res.status(400).send('Invalid signature');
-  }
-
-  //   // Optional: Timestamp verification for replay protection
-  //   const now = Date.now();
-  //   if (Math.abs(now - timestampHeader) > 5 * 60 * 1000) {
-  //     return res.status(400).send('Stale request');
-  //   }
-
-  // 4. Process the webhook data and write to DDB
-  const webhookData = JSON.parse(rawBody);
-  writeToDynamoDB(webhookData);
-
-  console.log('Webhook received and logged:', webhookData);
-
-  // Respond to Checkout.com to acknowledge receipt
-  res.status(200).send('OK');
-});
-
-// Start the Express server after loading environment variables
-fetchEnvVariables().then(() => {
-  const port = 80;
-  app.listen(port, () => {
-    console.log(`Webhook listener running on port ${port}`);
-  });
-});
+// if (product.paymentOptions.includes('recurring')) {
+//   item.recurring = {
+//     interval: product.recurring.interval,
+//     interval_count: product.recurring.intervalCount,
+//   };
+// }

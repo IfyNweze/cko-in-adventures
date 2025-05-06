@@ -1,0 +1,97 @@
+.navbar {
+    background-color: #333;
+    color: #fff;
+    padding: 10px 20px;
+    position: relative;
+  }
+  
+  .navbar-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .navbar-left,
+  .navbar-right {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+  }
+  
+  .navbar-brand {
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: #fff;
+    text-decoration: none;
+  }
+  
+  .navbar-link {
+    color: #fff;
+    text-decoration: none;
+  }
+  
+  .navbar-link:hover {
+    text-decoration: underline;
+  }
+  
+  .navbar-cart-wrapper {
+    position: relative;
+    cursor: pointer;
+  }
+  
+  .navbar-cart-total {
+    font-weight: bold;
+  }
+  
+  .navbar-button {
+    background: none;
+    border: none;
+    color: #fff;
+    cursor: pointer;
+  }
+  
+  .navbar-cart-dropdown {
+    position: absolute;
+    right: 0;
+    top: 30px;
+    background: #fff;
+    color: #000;
+    width: 250px;
+    border: 1px solid #ccc;
+    padding: 10px;
+    z-index: 10;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  }
+  
+  .navbar-cart-item {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 8px;
+    align-items: center;
+  }
+  
+  .cart-item-thumb {
+    width: 40px;
+    height: 40px;
+    object-fit: cover;
+  }
+  
+  .navbar-cart-link {
+    display: block;
+    margin-top: 10px;
+    text-align: center;
+    background: #333;
+    color: #fff;
+    padding: 6px 0;
+    text-decoration: none;
+  }
+  
+  .navbar-cart-link:hover {
+    background: #000;
+  }
+  
+  .navbar-cart-more {
+    font-style: italic;
+    text-align: center;
+  }
+  
