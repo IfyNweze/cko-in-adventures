@@ -1,29 +1,20 @@
-import { useLocation } from 'react-router-dom';
+import { Link } from 'react-router-dom';
+import Header from '../components/Header';
 
-const SuccessPage = () => {
-  const { state } = useLocation();
-  const { orderId, items } = state || {};
-
+export default function SuccessPage() {
   return (
-    <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold">Thank you for your order!</h1>
-      <p className="mt-2">Your order has been successfully processed.</p>
-      <p className="mt-4">Order ID: {orderId}</p>
-
-      <h3 className="mt-6 font-semibold">Items Purchased:</h3>
-      <ul className="mt-2">
-        {items && items.map(item => (
-          <li key={item.id}>{item.name} - {item.quantity} x ${item.price}</li>
-        ))}
-      </ul>
-
-      <div className="mt-6">
-        <button onClick={() => history.push('/products')} className="btn-primary">
-          Continue Shopping
-        </button>
+    <div className="min-h-screen bg-green-50">
+      <Header />
+      <div className="max-w-xl mx-auto p-6 text-center">
+        <h1 className="text-3xl font-bold text-green-700 mb-4">Payment Successful!</h1>
+        <p className="text-gray-700 mb-6">Thank you for your order. Your transaction was completed successfully.</p>
+        <Link
+          to="/"
+          className="inline-block bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700 transition"
+        >
+          Back to Home
+        </Link>
       </div>
     </div>
   );
-};
-
-export default SuccessPage;
+}

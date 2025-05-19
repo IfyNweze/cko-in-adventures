@@ -1,22 +1,20 @@
-import { useLocation } from 'react-router-dom';
+import { Link } from 'react-router-dom';
+import Header from '../components/Header';
 
-const FailurePage = () => {
-  const { state } = useLocation();
-  const { error } = state || {};
-
+export default function FailurePage() {
   return (
-    <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold text-red-600">Payment Failed</h1>
-      <p className="mt-2">Unfortunately, your payment could not be processed.</p>
-      <p className="mt-4 text-red-500">{error || 'Please try again later.'}</p>
-
-      <div className="mt-6">
-        <button onClick={() => history.push('/cart')} className="btn-primary">
-          Go Back to Cart
-        </button>
+    <div className="min-h-screen bg-red-50">
+      <Header />
+      <div className="max-w-xl mx-auto p-6 text-center">
+        <h1 className="text-3xl font-bold text-red-700 mb-4">Payment Failed</h1>
+        <p className="text-gray-700 mb-6">There was an issue with your payment. Please try again.</p>
+        <Link
+          to="/checkout"
+          className="inline-block bg-red-600 text-white px-6 py-2 rounded hover:bg-red-700 transition"
+        >
+          Try Again
+        </Link>
       </div>
     </div>
   );
-};
-
-export default FailurePage;
+}

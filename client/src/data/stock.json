@@ -1,0 +1,93 @@
+[
+    {
+    "id": 2,
+    "name": "Adventure Travel Backpack",
+    "type": "regular",
+    "description": "A durable backpack for all your adventure needs.",
+    "prices": {
+      "UK": 6500,
+      "US": 8500,
+      "France": 7500,
+      "Spain": 7500,
+      "Holland": 7500
+    }
+  },
+  {
+    "id": 3,
+    "name": "Monthly Adventure Box",
+    "type": "recurring",
+    "description": "A monthly subscription box filled with adventure gear.",
+    "prices": {
+      "UK": 5000,
+      "US": 6500,
+      "France": 6000,
+      "Spain": 6000,
+      "Holland": 6000
+    }
+  },
+  {
+    "id": 4,
+    "name": "Trip to Space - Orbital Adventure",
+    "type": "instalment",
+    "description": "A once-in-a-lifetime orbital space adventure.",
+    "prices": {
+      "UK": 20000000,
+      "US": 25000000,
+      "France": 23000000,
+      "Spain": 23000000,
+      "Holland": 23000000
+    }
+  },
+  {
+    "id": 5,
+    "name": "Backcountry Ski Package - Svalbard",
+    "type": "instalment",
+    "description": "An exclusive ski package in Svalbard.",
+    "prices": {
+      "UK": 300000,
+      "US": 400000,
+      "France": 350000,
+      "Spain": 350000,
+      "Holland": 350000
+    }
+  },
+  {
+    "id": 6,
+    "name": "Mystery Adventure Tour Voucher",
+    "type": "unscheduled",
+    "description": "A voucher for a mystery adventure tour.",
+    "prices": {
+      "UK": 10000,
+      "US": 13000,
+      "France": 12000,
+      "Spain": 12000,
+      "Holland": 12000
+    }
+  },
+  {
+    "id": 7,
+    "name": "Adventure Travel Gift Card",
+    "type": "unscheduled",
+    "description": "A gift card for adventure travel experiences.",
+    "prices": {
+      "UK": 5000,
+      "US": 6500,
+      "France": 6000,
+      "Spain": 6000,
+      "Holland": 6000
+    }
+  },
+  {
+    "id": 8,
+    "name": "Card Verification Token",
+    "type": "card-verification",
+    "description": "A token for card verification.",
+    "prices": {
+      "UK": 0,
+      "US": 0,
+      "France": 0,
+      "Spain": 0,
+      "Holland": 0
+    }
+  }
+]

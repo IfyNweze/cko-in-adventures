@@ -1,51 +1,82 @@
-require('dotenv').config(); 
-
+require('dotenv').config();
 const axios = require('axios');
 const bodyParser = require('body-parser');
-const { DateTime } = require('luxon');
+const cors = require('cors');
 const express = require('express');
-const uuid = require('uuid');
+const generateOrderId = require('./utils/generateOrderID');
 
 const app = express();
 
+app.use(bodyParser.json());
+app.use(cors({ origin: 'http://localhost:5173' }));
 
-// Middleware to parse JSON body for payment session endpoint
-app.use(express.json());
+const CHECKOUT_SECRET_KEY = process.env.CHECKOUT_SECRET_KEY;
 
-let CKO_SECRET_KEY;
-
-// Payment session endpoint
 app.post('/api/create-payment-session', async (req, res) => {
   try {
-    const { amount, currency, reference, customerEmail } = req.body;
-    if (!amount || !currency || !reference) {
-      return res.status(400).json({ error: 'Missing required fields' });
+    const { products, currency = 'GBP', address } = req.body;
+
+    // Log incoming data for debugging
+    console.log('Received products:', products);
+    console.log('Received currency:', currency);
+    console.log('Received address:', address);
+
+    if (!products || !Array.isArray(products) || products.length === 0) {
+      console.log('Error: No products found in request');
+      return res.status(400).json({ error: 'Missing or empty products array' });
     }
+
+    if (!address || !address.address || !address.city || !address.postalCode) {
+      console.log('Error: Invalid or missing address');
+      return res.status(400).json({ error: 'Missing or invalid address' });
+    }
+
+    // Calculate total amount (in minor units e.g. pence)
+    const amount = products.reduce((total, item) => {
+      if (!item.price || !item.quantity) {
+        throw new Error('Each product must have price and quantity');
+      }
+      return total + item.price * item.quantity;
+    }, 0);
+
+    console.log(`Total amount to charge: ${amount} ${currency}`);
+
+    const reference = generateOrderId();
+
     const response = await axios.post(
       'https://api.sandbox.checkout.com/payment-sessions',
       {
-        amount: Math.round(amount * 100), // Convert to cents
+        amount,
         currency,
         reference,
+        processing_channel_id: 'pc_nqrgzedskjyenbz7jra5jgpu7e',
+        "3ds": {
+          enabled: true,
+        },
         billing: {
           address: {
-            country: 'US', // Adjust dynamically if needed
+            address_line1: address.address,
+            city: address.city,
+            zip: address.postalCode,
+            country: address.country || 'GB',
           },
         },
         customer: {
-          email: customerEmail || 'customer@example.com',
+          email: address.email || 'customer@example.com',
+          name: address.name || 'Guest User',
         },
-        remember_me: true, // Enable saved card details
-        success_url: 'http://localhost:5173/checkout/success',
-        failure_url: 'http://localhost:5173/checkout/failure',
+        success_url: 'http://localhost:5173/success',
+        failure_url: 'http://localhost:5173/failure',
       },
       {
         headers: {
-          Authorization: `Bearer ${CKO_SECRET_KEY}`,
+          Authorization: `Bearer ${CHECKOUT_SECRET_KEY}`,
           'Content-Type': 'application/json',
         },
       }
     );
+
+    console.log('Payment session created successfully');
     res.json(response.data);
   } catch (error) {
     console.error('Error creating payment session:', error.response?.data || error.message);
@@ -53,10 +84,8 @@ app.post('/api/create-payment-session', async (req, res) => {
   }
 });
 
-
-// if (product.paymentOptions.includes('recurring')) {
-//   item.recurring = {
-//     interval: product.recurring.interval,
-//     interval_count: product.recurring.intervalCount,
-//   };
-// }
+// Start server
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
