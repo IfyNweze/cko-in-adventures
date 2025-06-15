@@ -1,7 +1,16 @@
-{
-  "id": "1",
-  "name": "Ski Performance T-Shirt",
-  "description": "Lightweight, sweat-wicking shirt perfect summer skiing.",
-  "price": 8999,
-  "image": "https://via.placeholder.com/400x300.png?text=Product+Image"
-}
+[
+  {
+    "id": "1",
+    "name": "Ski Performance Jacket",
+    "description": "Lightweight, sweat wicking jacket perfect for skiing.",
+    "price": 18999,
+    "image": "/SkiJacket.png"
+  },
+  {
+    "id": "2",
+    "name": "Women's Super Athletic Golf Polo",
+    "description": "Elegant performance polo designed for comfort on the course.",
+    "price": 7999,
+    "image": "/GolfWoman.png"
+  }
+]

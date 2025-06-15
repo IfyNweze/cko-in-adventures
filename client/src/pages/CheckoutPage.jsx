@@ -5,17 +5,29 @@ import CartSummary from '../components/CartSummary';
 import CheckoutFlow from '../components/CheckoutFlow';
 
 export default function CheckoutPage() {
-  const { cart } = useCart();
+  const { cartItems } = useCart();
   const { address } = useAddress();
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-white">
       <Header />
-      <div className="max-w-6xl mx-auto p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
-        <CartSummary />
-        <div className="bg-white p-6 rounded-xl shadow">
-          <h2 className="text-xl font-bold mb-4">Payment</h2>
-          <CheckoutFlow cart={cart} address={address} />
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+
+          {/* Left: Payment form */}
+          <div className="lg:pr-1">
+              <CheckoutFlow />
+          </div>
+          
+          {/* Right: Always-visible Order Summary */}
+          <div className="lg:pl-1">
+            <div className="sticky top-8">
+              <div className="bg-gray-50 rounded-2xl border border-gray-100 p-8 shadow-sm">
+                <h2 className="text-2xl font-bold text-gray-900 mb-6">Order Summary</h2>
+                <CartSummary />
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
