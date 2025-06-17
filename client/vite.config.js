@@ -7,24 +7,4 @@ export default defineConfig({
     react(),
     tailwindcss(),
   ],
-  server: {
-    proxy: {
-      '/.well-known': {
-        target: 'https://api.flow-demo.store',
-        changeOrigin: true,
-        secure: true,
-        rewrite: (path) => path, // Keep the path as-is
-      }
-    }
-  },
-  preview: {
-    proxy: {
-      '/.well-known': {
-        target: 'https://api.flow-demo.store',
-        changeOrigin: true,
-        secure: true,
-        rewrite: (path) => path,
-      }
-    }
-  }
 })
