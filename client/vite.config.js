@@ -9,10 +9,21 @@ export default defineConfig({
   ],
   server: {
     proxy: {
-      '/api': {
-        target: 'http://localhost:3000',
+      '/.well-known': {
+        target: 'https://api.flow-demo.store',
         changeOrigin: true,
-        secure: false
+        secure: true,
+        rewrite: (path) => path, // Keep the path as-is
+      }
+    }
+  },
+  preview: {
+    proxy: {
+      '/.well-known': {
+        target: 'https://api.flow-demo.store',
+        changeOrigin: true,
+        secure: true,
+        rewrite: (path) => path,
       }
     }
   }
