@@ -38,6 +38,10 @@ const handleError = (res, error, message) => {
 // Route Registrations
 createPaymentSessionRoute(config.app, config, handleError, generateOrderId, validCountryCodes, axios);
 
+config.app.get('/ping', (req, res) => {
+  res.status(200).send('pong');
+});
+
 config.app.get('/.well-known/apple-developer-merchantid-domain-association', (req, res) => {
   const filePath = path.join(__dirname, 'public', '.well-known', 'apple-developer-merchantid-domain-association');
 

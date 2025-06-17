@@ -138,8 +138,16 @@ export default function CheckoutFlow() {
         console.timeEnd("CheckoutInit");
         console.time("FlowMount");
         const flowComponent = checkout.create("flow");
+        // const applepayComponent = checkout.create("applepay");
+        // const googlepayComponent = checkout.create("googlepay");
         console.log("Flow component created");
         setTimeout(() => flowComponent.mount("#flow-container"), 0);
+        // if (await googlepayComponent.isAvailable()) {
+        //   googlepayComponent.mount('#googlepay-container');
+        // }
+        // if (await applepayComponent.isAvailable()) {
+        //   applepayComponent.mount('#applepay-container');
+        // }
         console.timeEnd("FlowMount");
       } catch (err) {
         console.error("Checkout flow error:", err.message);
@@ -166,8 +174,9 @@ export default function CheckoutFlow() {
         </div>
       )}
 
-      {/* JUST the mount point — no visual styling */}
       <div id="flow-container" className="w-full" />
+      {/* <div id="applepay-container" className="w-full" />
+      <div id="googlepay-container" className="w-full" /> */}
     </div>
   );
 }
