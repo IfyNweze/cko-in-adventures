@@ -46,12 +46,9 @@ config.app.get('/.well-known/apple-developer-merchantid-domain-association', (re
   const filePath = path.join(__dirname, 'public', '.well-known', 'apple-developer-merchantid-domain-association');
 
   if (fs.existsSync(filePath)) {
-    res.download(filePath, 'apple-developer-merchantid-domain-association.txt', (err) => {
-      if (err) {
-        console.error('Download error:', err);
-        res.status(500).send('Failed to download file');
-      }
-    });
+    res.setHeader('Content-Type', 'text/plain');
+    res.setHeader('Content-Disposition', 'attachment; filename="apple-developer-merchantid-domain-association"');
+    res.sendFile(filePath);
   } else {
     res.status(404).send('Verification file not found');
   }
