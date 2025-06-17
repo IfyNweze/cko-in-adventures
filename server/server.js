@@ -42,6 +42,36 @@ config.app.get('/ping', (req, res) => {
   res.status(200).send('pong');
 });
 
+config.app.get('/debug-files', (req, res) => {
+  try {
+    console.log('__dirname:', __dirname);
+    
+    // Check if public directory exists
+    const publicPath = path.resolve(__dirname, 'public');
+    console.log('Public dir exists:', fs.existsSync(publicPath));
+    
+    if (fs.existsSync(publicPath)) {
+      console.log('Contents of public:', fs.readdirSync(publicPath));
+      
+      // Check .well-known
+      const wellKnownPath = path.resolve(__dirname, 'public', '.well-known');
+      console.log('Well-known dir exists:', fs.existsSync(wellKnownPath));
+      
+      if (fs.existsSync(wellKnownPath)) {
+        console.log('Contents of .well-known:', fs.readdirSync(wellKnownPath));
+      }
+    }
+    
+    res.json({ 
+      dirname: __dirname,
+      publicExists: fs.existsSync(publicPath),
+      wellKnownExists: fs.existsSync(path.resolve(__dirname, 'public', '.well-known'))
+    });
+  } catch (e) {
+    res.json({ error: e.message });
+  }
+});
+
 config.app.get('/.well-known/apple-developer-merchantid-domain-association', (req, res) => {
   console.log('Route hit!'); // Confirm route is being accessed
   const filePath = path.resolve(__dirname, 'public', '.well-known', 'apple-developer-merchantid-domain-association');
