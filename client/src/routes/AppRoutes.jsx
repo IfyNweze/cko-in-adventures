@@ -13,6 +13,8 @@ export default function AppRoutes() {
       <Route path="/checkout" element={<CheckoutPage />} />
       <Route path="/success" element={<SuccessPage />} />
       <Route path="/failure" element={<FailurePage />} />
+      <Route path="/.well-known/*" element={null} />
     </Routes>
   );
 }
+
