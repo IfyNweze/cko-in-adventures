@@ -43,17 +43,29 @@ config.app.get('/ping', (req, res) => {
 });
 
 config.app.get('/.well-known/apple-developer-merchantid-domain-association', (req, res) => {
+  console.log('Route hit!'); // Confirm route is being accessed
   const filePath = path.resolve(__dirname, 'public', '.well-known', 'apple-developer-merchantid-domain-association');
   
-  console.log('Looking for file at:', filePath); //
-  console.log('File exists:', fs.existsSync(filePath)); 
+  console.log('__dirname:', __dirname);
+  console.log('Looking for file at:', filePath);
+  console.log('File exists:', fs.existsSync(filePath));
   
   if (fs.existsSync(filePath)) {
     res.setHeader('Content-Type', 'text/plain');
     res.setHeader('Content-Disposition', 'attachment; filename="apple-developer-merchantid-domain-association"');
     res.sendFile(filePath);
   } else {
-    console.log('File not found at:', filePath);
+    console.log('File not found!');
+    console.log('Directory contents:');
+    try {
+      const wellKnownPath = path.resolve(__dirname, 'public', '.well-known');
+      console.log('Well-known dir exists:', fs.existsSync(wellKnownPath));
+      if (fs.existsSync(wellKnownPath)) {
+        console.log('Files in .well-known:', fs.readdirSync(wellKnownPath));
+      }
+    } catch (e) {
+      console.log('Error reading directory:', e);
+    }
     res.status(404).send('Verification file not found');
   }
 });
