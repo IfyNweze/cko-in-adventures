@@ -43,13 +43,17 @@ config.app.get('/ping', (req, res) => {
 });
 
 config.app.get('/.well-known/apple-developer-merchantid-domain-association', (req, res) => {
-  const filePath = path.join(__dirname, 'public', '.well-known', 'apple-developer-merchantid-domain-association');
-
+  const filePath = path.resolve(__dirname, 'public', '.well-known', 'apple-developer-merchantid-domain-association');
+  
+  console.log('Looking for file at:', filePath); //
+  console.log('File exists:', fs.existsSync(filePath)); 
+  
   if (fs.existsSync(filePath)) {
     res.setHeader('Content-Type', 'text/plain');
     res.setHeader('Content-Disposition', 'attachment; filename="apple-developer-merchantid-domain-association"');
     res.sendFile(filePath);
   } else {
+    console.log('File not found at:', filePath);
     res.status(404).send('Verification file not found');
   }
 });
