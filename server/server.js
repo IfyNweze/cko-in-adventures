@@ -46,10 +46,10 @@ config.app.get('/.well-known/apple-developer-merchantid-domain-association', (re
   const filePath = path.join(__dirname, 'public', '.well-known', 'apple-developer-merchantid-domain-association');
 
   if (fs.existsSync(filePath)) {
-    res.download(filePath, 'apple-developer-merchantid-domain-association', (err) => {
+    res.download(filePath, 'apple-developer-merchantid-domain-association.txt', (err) => {
       if (err) {
-        console.error('Error sending file:', err);
-        res.status(500).send('Error sending file');
+        console.error('Download error:', err);
+        res.status(500).send('Failed to download file');
       }
     });
   } else {
