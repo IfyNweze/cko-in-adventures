@@ -5,15 +5,13 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "vite build && cp -r public/.well-known dist/.well-known",
     "lint": "eslint .",
     "preview": "vite preview",
-    "start": "node server.js"
+    "start": "serve dist -c serve.json"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.1.5",
-    "express": "^5.1.0",
-    "http-proxy-middleware": "^3.0.5",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-router-dom": "^7.5.1",
