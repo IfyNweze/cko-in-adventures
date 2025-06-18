@@ -15,7 +15,7 @@ export default function Header() {
               </svg>
             </div>
             <span className="text-xl font-bold text-blue-600 group-hover:text-blue-700 transition-all duration-300">
-              CKO FLOW DEMO
+              TEST DEMO 
             </span>
           </Link>
         </div>
